@@ -1,0 +1,29 @@
+---
+- name: Verificación básica del clúster
+  hosts: all
+  gather_facts: yes
+
+  tasks:
+    - name: Verificar conectividad
+      ping:
+
+    - name: Verificar que Python está instalado
+      command: python3 --version
+      register: python_version
+      changed_when: false
+
+    - name: Mostrar versión de Python
+      debug:
+        msg: "Python instalado: {{ python_version.stdout }}"
+
+    - name: Verificar que existe directorio /home
+      stat:
+        path: /home
+      register: home_dir
+
+    - name: Validar directorio home
+      assert:
+        that:
+          - home_dir.stat.exists
+          - home_dir.stat.isdir
+        success_msg: "Directorio /home existe"

@@ -1,0 +1,29 @@
+---
+- name: Mi primer playbook
+  hosts: all
+  become: true
+
+  vars:
+    paquetes:
+      - vim
+      - htop
+
+  tasks:
+    # TODO: Agregar tarea 1 - Instalar paquetes
+    # Tip: usa el módulo 'package' con una lista en 'name'
+
+    # TODO: Agregar tarea 2 - Configurar timezone
+    # Tip: usa el módulo 'timezone' con 'name: America/Bogota'
+
+    # TODO: Agregar tarea 3 - Crear directorio
+    # Tip: usa el módulo 'file' con 'path', 'state: directory', y 'mode'
+
+- name: playbook 2
+  hosts: master
+  become: false
+
+  # tasks:
+  #   - name: Buscar paquetes
+  #     shell: "which {{paquetes}}"
+  #     loop: { { paquetes } }
+  #     changed_when: true

@@ -1,0 +1,31 @@
+---
+- name: Instalar Miniconda y paquetes científicos
+  hosts: gpu_nodes
+  become: yes
+
+  vars:
+    miniconda_installer: "Miniconda3-latest-Linux-x86_64.sh"
+    miniconda_url: "https://repo.anaconda.com/miniconda/{{ miniconda_installer }}"
+    install_path: "/opt/miniconda3"
+    packages:
+      - numpy
+      - pandas
+      - matplotlib
+
+  tasks:
+    - name: Descargar Miniconda
+      get_url:
+        url: "{{ miniconda_url }}"
+        dest: "/tmp/{{ miniconda_installer }}"
+        mode: '0755'
+
+    - name: Instalar Miniconda
+      command: "/tmp/{{ miniconda_installer }} -b -p {{ install_path }}"
+      args:
+        creates: "{{ install_path }}/bin/conda"
+
+    - name: Instalar paquetes con conda
+      command: "{{ install_path }}/bin/conda install -y {{ item }}"
+      loop: "{{ packages }}"
+      register: conda_install
+      changed_when: "'already installed' not in conda_install.stdout"
