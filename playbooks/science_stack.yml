@@ -53,5 +53,5 @@
         creates: "{{ install_path }}/envs/{{ conda_env }}/bin/python"
 
     - name: Verificar imports en el env (diagnóstico)
-      ansible.builtin.command: "{{ install_path }}/bin/conda run -n {{ conda_env }} python -c "import numpy, pandas, matplotlib; print('OK')"
+      ansible.builtin.command: '{{ install_path }}/bin/conda run -n {{ conda_env }} python -c "import numpy, pandas, matplotlib; print(\"OK\")"'
       changed_when: false
