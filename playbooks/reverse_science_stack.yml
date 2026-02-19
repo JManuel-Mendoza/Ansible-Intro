@@ -1,0 +1,48 @@
+---
+- name: Revertir Miniconda + env + conda init (para ansible_user)
+  hosts: compute
+  become: yes
+
+  vars:
+    install_path: "/opt/miniconda3"
+    miniconda_installer: "Miniconda3-latest-Linux-x86_64.sh"
+    conda_env: "science"
+
+  tasks:
+    - name: Revertir conda init en ~/.bashrc del usuario del inventario (ansible_user)
+      ansible.builtin.replace:
+        path: "/home/{{ ansible_user }}/.bashrc"
+        regexp: '(?ms)^\s*# >>> conda initialize >>>.*?# <<< conda initialize <<<\s*\n?'
+        replace: ''
+        backup: yes
+      become: true
+      become_user: "{{ ansible_user }}"
+      ignore_errors: true
+
+    - name: Eliminar entorno conda ({{ conda_env }})
+      ansible.builtin.file:
+        path: "{{ install_path }}/envs/{{ conda_env }}"
+        state: absent
+
+    - name: Eliminar instalación completa de Miniconda
+      ansible.builtin.file:
+        path: "{{ install_path }}"
+        state: absent
+
+    - name: Eliminar instalador descargado
+      ansible.builtin.file:
+        path: "/tmp/{{ miniconda_installer }}"
+        state: absent
+
+    - name: Eliminar caches típicas de conda del usuario (si existen)
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/home/{{ ansible_user }}/.conda"
+        - "/home/{{ ansible_user }}/.continuum"
+        - "/home/{{ ansible_user }}/.config/conda"
+        - "/home/{{ ansible_user }}/.cache/conda"
+      become: true
+      become_user: "{{ ansible_user }}"
+      ignore_errors: true

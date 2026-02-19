@@ -1,12 +1,16 @@
 ---
-- name: Instalar Miniconda y paquetes científicos
-  hosts: gpu_nodes
+- name: Instalar Miniconda y paquetes científicos (en un env) + conda init para ansible_user
+  hosts: compute
   become: yes
 
   vars:
     miniconda_installer: "Miniconda3-latest-Linux-x86_64.sh"
     miniconda_url: "https://repo.anaconda.com/miniconda/{{ miniconda_installer }}"
     install_path: "/opt/miniconda3"
+
+    conda_env: "science"
+    conda_python: "3.11"
+
     packages:
       - numpy
       - pandas
@@ -14,18 +18,40 @@
 
   tasks:
     - name: Descargar Miniconda
-      get_url:
+      ansible.builtin.get_url:
         url: "{{ miniconda_url }}"
         dest: "/tmp/{{ miniconda_installer }}"
-        mode: '0755'
+        mode: "0755"
 
     - name: Instalar Miniconda
-      command: "/tmp/{{ miniconda_installer }} -b -p {{ install_path }}"
+      ansible.builtin.command: "/tmp/{{ miniconda_installer }} -b -p {{ install_path }}"
       args:
         creates: "{{ install_path }}/bin/conda"
 
-    - name: Instalar paquetes con conda
-      command: "{{ install_path }}/bin/conda install -y {{ item }}"
-      loop: "{{ packages }}"
-      register: conda_install
-      changed_when: "'already installed' not in conda_install.stdout"
+    - name: Aceptar ToS de canales de Anaconda (pkgs/main)
+      ansible.builtin.command: "{{ install_path }}/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main"
+      register: tos_main
+      changed_when: "'accepted' in (tos_main.stdout | lower) or 'accepted' in (tos_main.stderr | lower)"
+      failed_when: false
+
+    - name: Aceptar ToS de canales de Anaconda (pkgs/r)
+      ansible.builtin.command: "{{ install_path }}/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r"
+      register: tos_r
+      changed_when: "'accepted' in (tos_r.stdout | lower) or 'accepted' in (tos_r.stderr | lower)"
+      failed_when: false
+
+    - name: conda init (bash) para el usuario del inventario (ansible_user)
+      ansible.builtin.command: "{{ install_path }}/bin/conda init bash"
+      become: true
+      become_user: "{{ ansible_user }}"
+      register: conda_init_out
+      changed_when: "'no change' not in ((conda_init_out.stdout | default('')) | lower)"
+
+    - name: Crear entorno conda e instalar paquetes ({{ conda_env }})
+      ansible.builtin.command: "{{ install_path }}/bin/conda create -y -n {{ conda_env }} python={{ conda_python }} {{ packages | join(' ') }}"
+      args:
+        creates: "{{ install_path }}/envs/{{ conda_env }}/bin/python"
+
+    - name: Verificar imports en el env (diagnóstico)
+      ansible.builtin.command: "{{ install_path }}/bin/conda run -n {{ conda_env }} python -c "import numpy, pandas, matplotlib; print('OK')"
+      changed_when: false
