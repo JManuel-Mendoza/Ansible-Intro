@@ -5,13 +5,11 @@
 
   vars:
     # Los participantes cambian esta variable de vim a htop.
-    package_name:
-      - htop
-      - vim
+    package_name: vim
 
   tasks:
     # Instalación del paquete definido en package_name.
     - name: Instalar paquete con el módulo package
       package:
         name: "{{ package_name }}"
-        state: latest #present
+        state: present

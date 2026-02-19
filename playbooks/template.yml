@@ -18,12 +18,12 @@
     # TODO: Agregar tarea 3 - Crear directorio
     # Tip: usa el módulo 'file' con 'path', 'state: directory', y 'mode'
 
-- name: playbook 2
-  hosts: master
-  become: false
+# - name: playbook 2
+#   hosts: master
+#   become: false
 
-  # tasks:
-  #   - name: Buscar paquetes
-  #     shell: "which {{paquetes}}"
-  #     loop: { { paquetes } }
-  #     changed_when: true
+#   tasks:
+#     - name: Buscar paquetes
+#       command: "which {{paquetes}}"
+#       loop: "{{paquetes}}"
+#       changed_when: true
